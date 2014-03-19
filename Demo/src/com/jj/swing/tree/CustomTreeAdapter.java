@@ -45,6 +45,7 @@ public class CustomTreeAdapter extends DefaultTreeAdapter {
 					TreeCell cell = TreeCell.this;
 					DefaultTreeModel model = (DefaultTreeModel)cell.model;
 					model.removeNodeFromParent(cell.value);
+					System.out.println("removed");
 				}
 			});
 			

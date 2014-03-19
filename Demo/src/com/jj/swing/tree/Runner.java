@@ -1,6 +1,7 @@
 package com.jj.swing.tree;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.BoxLayout;
@@ -12,6 +13,7 @@ import javax.swing.JTree;
 import javax.swing.border.LineBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 
 public class Runner {
 
@@ -22,7 +24,7 @@ public class Runner {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 		DefaultTreeModel model = getTestModel();
-		TreeView treeView = new TreeView(new CustomTreeAdapter(model));
+		TreeView treeView = new TreeView(new CustomTreeAdapter(model), frame);
 		panel.add(treeView);
 		panel.setBorder(new LineBorder(Color.BLUE));
 		JTree tree = new JTree();
@@ -36,7 +38,7 @@ public class Runner {
 		
 		treeView.setModel(model);
 		
-//		treeView.setRootVisible(false);
+		treeView.setRootVisible(false);
 //		treeView.expandAll();
 		
 		frame.add(panel);
@@ -44,6 +46,14 @@ public class Runner {
 		
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)model.getChild(model.getRoot(), 2);
 		model.insertNodeInto(new DefaultMutableTreeNode("test123"), node, 2);
+		
+		treeView.addTreeSelectionListener(new TreeSelectionListener() {
+			
+			@Override
+			public void nodeSelected(TreeNode node, Component source) {
+				System.out.println(node + ": " + source);
+			}
+		});
 	}
 
 	public static DefaultTreeModel getTestModel() {

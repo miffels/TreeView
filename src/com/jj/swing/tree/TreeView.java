@@ -1,5 +1,6 @@
 package com.jj.swing.tree;
 
+import java.awt.AWTEvent;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
@@ -9,9 +10,13 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,8 +29,10 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -54,6 +61,7 @@ public class TreeView extends JComponent {
 			this.add(this.icon);
 			this.expander.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			this.setBackground(Color.WHITE);
+			this.setFocusable(true);
 		}
 		
 		private void calculateSize() {
@@ -177,21 +185,51 @@ public class TreeView extends JComponent {
 	Map<TreeNode, Integer> valueDepths = new HashMap<TreeNode, Integer>();
 	Map<TreeNode, TreeNode> parents = new HashMap<TreeNode, TreeNode>();
 	
+	private List<TreeSelectionListener> selectionListeners = new ArrayList<TreeSelectionListener>();
+	
 	private Icon leafIcon;
 	private Icon closedIcon;
 	private Icon openIcon;
+
+	private TreeNode lastSelectedNode;
+
+	private AWTEventListener globalListener = new AWTEventListener() {
+		
+	    public void eventDispatched(AWTEvent e) {
+	    	if(e.getID() != MouseEvent.MOUSE_CLICKED) {
+	    		return;
+	    	}
+	    	System.out.println("[heavy breathing]");
+	        for(Component component : TreeView.this.getComponents()) {
+	        	if(SwingUtilities.isDescendingFrom((Component)e.getSource(), component)) {
+	        		TreeView.this.fireTreeSelectionChangeEvent(((RowPanel)component).value, (Component)e.getSource());		        		
+	        	}
+	        }
+	    }
+	    
+	};
 	
-	public TreeView(TreeAdapter adapter) {
-		this(adapter, null);
+	public TreeView(TreeAdapter adapter, JFrame parentFrame) {
+		this(adapter, null, parentFrame);
 	}
 	
-	public TreeView(TreeAdapter adapter, TreeModel model) {
+	public TreeView(TreeAdapter adapter, TreeModel model, JFrame parentFrame) {
 		this.adapter = adapter;
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		this.setLeafIcon(UIManager.getIcon("Tree.leafIcon"));
 		this.setClosedIcon(UIManager.getIcon("Tree.closedIcon"));
 		this.setOpenIcon(UIManager.getIcon("Tree.openIcon"));
 		this.setModel(model);
+		
+		Toolkit.getDefaultToolkit().addAWTEventListener(this.globalListener, AWTEvent.MOUSE_EVENT_MASK);
+		
+		parentFrame.addWindowListener(new WindowAdapter() {
+			
+			@Override
+			public void windowClosed(WindowEvent e) {
+				Toolkit.getDefaultToolkit().removeAWTEventListener(TreeView.this.globalListener);
+			}
+		});
 	}
 	
 	public void setModel(TreeModel model) {
@@ -210,6 +248,10 @@ public class TreeView extends JComponent {
 			model.addTreeModelListener(this.modelListener);
 			this.populate();
 		}
+	}
+	
+	public TreeModel getModel() {
+		return this.model;
 	}
 	
 	private void remove(TreeNode node) {
@@ -456,7 +498,7 @@ public class TreeView extends JComponent {
 		return parent != null && this.model.getIndexOfChild(parent, child) == this.model.getChildCount(parent) - 1;
 	}
 	
-	private TreeNode getParentOf(TreeNode child) {
+	public TreeNode getParentOf(TreeNode child) {
 		TreeNode parent = this.parents.get(child);
 		TreeNode root = this.getRoot();
 		if(parent == null && root != parent)  {
@@ -502,6 +544,23 @@ public class TreeView extends JComponent {
 
 	public Icon getOpenIcon() {
 		return openIcon;
+	}
+	
+	public void addTreeSelectionListener(TreeSelectionListener listener) {
+		this.selectionListeners.add(listener);
+	}
+	
+	public void removeTreeSelectionListener(TreeSelectionListener listener) {
+		this.selectionListeners.remove(listener);
+	}
+	
+	private void fireTreeSelectionChangeEvent(TreeNode node, Component source) {
+		if(this.lastSelectedNode != node) {
+			this.lastSelectedNode = node;
+			for(TreeSelectionListener listener : this.selectionListeners) {
+				listener.nodeSelected(node, source);
+			}
+		}
 	}
 	
 }
