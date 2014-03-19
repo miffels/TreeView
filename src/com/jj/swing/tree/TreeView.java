@@ -58,9 +58,10 @@ public class TreeView extends JComponent {
 		
 		private void calculateSize() {
 			Icon icon = this.icon.getIcon();
-			if(icon != null && this.content != null) {
-				this.icon.setPreferredSize(new Dimension(icon.getIconWidth(), Math.max(icon.getIconHeight(), this.content.getPreferredSize().height)));
-				int iconWidth = this.icon.getIcon() == null ? 0 : this.icon.getIcon().getIconWidth();
+			if(this.content != null) {
+				int iconHeight = icon == null ? 0 : icon.getIconHeight();
+				int iconWidth = icon == null ? 0 : icon.getIconWidth();
+				this.icon.setPreferredSize(new Dimension(iconWidth, Math.max(iconHeight, this.content.getPreferredSize().height)));
 				this.size = new Dimension(content.getPreferredSize().width + LEVEL_INSET_PIXELS * TreeView.this.getDepthOf(value) + iconWidth, this.content.getPreferredSize().height);
 				this.expander.setPreferredSize(new Dimension(LEVEL_INSET_PIXELS, content.getPreferredSize().height));
 			}
@@ -71,8 +72,8 @@ public class TreeView extends JComponent {
 				this.remove(this.content);
 			}
 			this.content = content;
-			this.calculateSize();
 			this.add(content);
+			this.calculateSize();
 		}
 		
 		
@@ -143,7 +144,7 @@ public class TreeView extends JComponent {
 			TreeNode child = (TreeNode)e.getChildren()[0];
 			this.tree.valueDepths.put(child, this.tree.rootVisible ?  e.getPath().length : e.getPath().length - 1);
 			if(this.tree.expandedNodes.contains(parent)) {
-				this.tree.addRecursively(this.tree.indexOf(this.tree.reuseComponents.get(parent)) + e.getChildIndices()[0], child);
+				this.tree.addRecursively(this.tree.indexOf(this.tree.getComponentFor(parent)) + e.getChildIndices()[0], child);
 				this.tree.calculateSize();
 				this.tree.revalidate();
 			}
@@ -180,6 +181,10 @@ public class TreeView extends JComponent {
 	private Icon closedIcon;
 	private Icon openIcon;
 	
+	public TreeView(TreeAdapter adapter) {
+		this(adapter, null);
+	}
+	
 	public TreeView(TreeAdapter adapter, TreeModel model) {
 		this.adapter = adapter;
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -201,8 +206,6 @@ public class TreeView extends JComponent {
 		this.parents.clear();
 		this.removeAll();
 		
-		System.out.println(this.valueDepths);
-		
 		if(model != null) {
 			model.addTreeModelListener(this.modelListener);
 			this.populate();
@@ -216,7 +219,7 @@ public class TreeView extends JComponent {
 	}
 	
 	private void removeRecursively2(TreeNode node) {
-		this.remove(this.reuseComponents.get(node));
+		this.remove(this.getComponentFor(node));
 		this.expandedNodes.remove(node);
 		this.reuseComponents.remove(node);
 		this.valueDepths.remove(node);
@@ -356,9 +359,10 @@ public class TreeView extends JComponent {
 			for(TreeNode child : this.getChildrenOf(value)) {
 				this.removeRecursively(child);
 			}
+			this.getComponentFor(value);
 		} else {
 			this.expandedNodes.add(value);
-			int index = this.indexOf(this.reuseComponents.get(value));
+			int index = this.indexOf(this.getComponentFor(value));
 			for(TreeNode child : this.getChildrenOf(value)) {
 				index = this.addRecursively(index, child);
 			}
@@ -371,7 +375,7 @@ public class TreeView extends JComponent {
 	
 	private void removeRecursively(TreeNode node) {
 		if(this.reuseComponents.containsKey(node)) {
-			this.remove(this.reuseComponents.get(node));
+			this.remove(this.getComponentFor(node));
 		}
 		for(TreeNode child : this.getChildrenOf(node)) {
 			this.removeRecursively(child);

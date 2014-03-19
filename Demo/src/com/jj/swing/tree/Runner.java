@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -21,7 +22,7 @@ public class Runner {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 		DefaultTreeModel model = getTestModel();
-		TreeView treeView = new TreeView(new CustomTreeAdapter(model), model);
+		TreeView treeView = new TreeView(new CustomTreeAdapter(model));
 		panel.add(treeView);
 		panel.setBorder(new LineBorder(Color.BLUE));
 		JTree tree = new JTree();
@@ -29,6 +30,11 @@ public class Runner {
 		tree.setCellRenderer(new CustomTreeCellRenderer());
 		panel.add(tree);
 		panel.add(new JLabel("HiiiI!"));
+		
+		treeView.setOpenIcon(new ImageIcon("img/expanded.png"));
+		treeView.setClosedIcon(new ImageIcon("img/collapsed.png"));
+		
+		treeView.setModel(model);
 		
 //		treeView.setRootVisible(false);
 //		treeView.expandAll();
