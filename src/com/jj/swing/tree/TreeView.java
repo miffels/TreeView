@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.Box;
@@ -165,8 +166,10 @@ public class TreeView extends JComponent {
 			this.tree.remove(node);
 			if(this.tree.isLeaf(parent)) {
 				// Just became a leaf
-				this.tree.getComponentFor((TreeNode)e.getPath()[e.getPath().length - 1]);
+				this.tree.refresh((TreeNode)e.getPath()[e.getPath().length - 1]);
 			}
+			this.tree.calculateSize();
+			this.tree.revalidate();
 		}
 
 		@Override
@@ -199,7 +202,6 @@ public class TreeView extends JComponent {
 	    	if(e.getID() != MouseEvent.MOUSE_CLICKED) {
 	    		return;
 	    	}
-	    	System.out.println("[heavy breathing]");
 	        for(Component component : TreeView.this.getComponents()) {
 	        	if(SwingUtilities.isDescendingFrom((Component)e.getSource(), component)) {
 	        		TreeView.this.fireTreeSelectionChangeEvent(((RowPanel)component).value, (Component)e.getSource());		        		
@@ -248,6 +250,9 @@ public class TreeView extends JComponent {
 			model.addTreeModelListener(this.modelListener);
 			this.populate();
 		}
+		this.invalidate();
+		this.revalidate();
+		this.repaint();
 	}
 	
 	public TreeModel getModel() {
@@ -345,7 +350,16 @@ public class TreeView extends JComponent {
 		return children;
 	}
 	
-	Component getComponentFor(final TreeNode value) {
+	/**
+	 * Updates the data of the corresponding TreeRow.
+	 * 
+	 * @param value
+	 */
+	protected void refresh(TreeNode value) {
+		this.getComponentFor(value);
+	}
+	
+	private Component getComponentFor(final TreeNode value) {
 		RowPanel reusePanel = this.reuseComponents.get(value);
 		if(reusePanel == null) {
 			reusePanel = new RowPanel(this.getDepthOf(value));
@@ -559,6 +573,17 @@ public class TreeView extends JComponent {
 			this.lastSelectedNode = node;
 			for(TreeSelectionListener listener : this.selectionListeners) {
 				listener.nodeSelected(node, source);
+			}
+		}
+	}
+	
+	public void focusRow(int rowIndex) {
+		Component row = this.getComponents()[rowIndex];
+		row.requestFocus();
+		for(Entry<TreeNode, RowPanel> entry : this.reuseComponents.entrySet()) {
+			if(entry.getValue().equals(row)) {
+				this.fireTreeSelectionChangeEvent(entry.getKey(), row);
+				break;
 			}
 		}
 	}
