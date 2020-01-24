@@ -1,0 +1,12 @@
+apply plugin: 'idea'
+//and standard one
+apply plugin: 'java'
+
+version = '0.0.1'
+
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+}
