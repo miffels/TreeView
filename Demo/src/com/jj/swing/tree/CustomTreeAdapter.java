@@ -17,7 +17,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-public class CustomTreeAdapter extends DefaultTreeAdapter {
+public class CustomTreeAdapter extends com.jj.swing.tree.DefaultTreeAdapter {
 	
 	private static class TreeCell extends JPanel {
 		private static final long serialVersionUID = 1L;
