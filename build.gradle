@@ -15,4 +15,5 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
+group = 'com.jj.swing'
 version = '0.0.1'
