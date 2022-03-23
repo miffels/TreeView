@@ -17,3 +17,7 @@ dependencies {
 
 group = 'com.jj.swing'
 version = '0.0.1'
+
+compileJava {
+    options.release = 7
+}
